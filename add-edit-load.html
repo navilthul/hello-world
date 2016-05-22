@@ -1,0 +1,907 @@
+<div class="container-fluid">
+
+    <div class="header-section">
+        <div class="status-section">
+            <span class="status-info">KAM: {{ load.keyAccountManager.fullName }}</span>
+            <span class="status-info">Status: {{ loadStatusText() }}</span>
+            <div class="btn btn-primary btn-prev"
+                 ng-disabled ="!load.previousLoadId"
+                 ng-click="goToLoad(load.previousLoadId)"
+                 tabindex="0">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+                 
+            </div>
+            <div class="btn-group" dropdown>
+                <button id="actionButton" type="button" class="btn btn-primary" dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    {{ load.loadReference }} <span class="caret"></span>
+                </button>
+
+                <ul class="dropdown-menu pull-right">
+                    <li class="pull-right" tooltip="{{ createDriverInstructionsTooltip() }}" tooltip-placement="left">
+                        <a ng-click="createDriverInstructions()" ng-class="{linkDisabled: isCreateDriverInstructionsDisabled() || !load.id}" data-style="zoom-out" ladda="creatingDocument">Create Driver Instructions</a>
+                    </li>
+                    <li class="pull-right" tooltip="{{ createInvoiceTooltip() }}" tooltip-placement="left" ng-show="allowCreateInvoice">
+                        <a ng-click="createInvoice(false,false)" ng-class="{linkDisabled: isCreateInvoiceDisabled() || !load.id}">Create Invoice</a>
+                    </li>
+                    <li class="pull-right" tooltip="{{ createInvoiceTooltip() }}" tooltip-placement="left" ng-show="allowCreateInvoice">
+                        <a ng-click="createInvoice(true,false)" ng-class="{linkDisabled: isCreateInvoiceDisabled() || !load.id}">Create Pre Invoice</a>
+                    </li>
+                    <li class="pull-right" tooltip-placement="left">
+                        <a ng-click="createInvoice(false,true)" ng-class="{linkDisabled: !load.id}" ng-show="allowCreateInvoice">Create Pro-forma Invoice</a>
+                    </li>
+                    <li class="pull-right">
+                        <a ng-click="viewInvoice(load.invoiceDocumentIdentifier)" ng-class="{linkDisabled: !load.invoiceId}">View Invoice</a>
+                    </li>
+                    <li class="pull-right" tooltip="{{ subcontractTooltip() }}" tooltip-placement="left">
+                        <a ng-click="subcontract()" ng-class="{linkDisabled: isSubcontractDisabled() || !load.id}">{{ subcontractText() }}</a>
+                    </li>
+                    <li class="pull-right">
+                        <a ng-click="copyLoad()">Copy Load</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="btn btn-primary btn-next"
+                 ng-disabled ="!load.nextLoadId"
+                 ng-click="goToLoad(load.nextLoadId)"
+                 tabindex="0">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <form class="dwt-form" name="loadForm" role="form">
+            <div class="form-horizontal col-md-3">
+                <h4 class="form-sub-header">Collection</h4>
+                <hr class="form-sep" />
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group typeahead typeahead-scrollable">
+                            <input type="text"
+                                   autocomplete="off"
+                                   class="form-control"
+                                   placeholder="Company Name"
+                                   tooltip="Company Name"
+                                   ng-model="load.cdCompanyName"
+                                   typeahead="cdCompanyAddress as load.cdCompanyName for cdCompanyAddress in cdCompanyAddresses | filter:{'name':$viewValue}"
+                                   typeahead-editable="true"
+                                   typeahead-template-url="/js/app/jobs/loads/company-address-template.html"
+                                   typeahead-loading="loading"
+                                   typeahead-on-select="setCollectionAddress($item)"
+                                   typeahead-dropdown="cdCompanyAddresses"
+                                   typeahead-dropdown-view-field="addressLines"
+                                   typeahead-dropdown-on-select="setCollectionAddress"
+                                   required
+                                   capitalize
+                                   caret-aware="cdCompanyName"
+                                   name="cdCompanyName"
+                                   ng-maxlength="100">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdCompanyName" field-name="Company Name" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <textarea rows="4"
+                                      class="form-control rounded"
+                                      placeholder="Address"
+                                      tooltip="Address"
+                                      name="cdaddressLines"
+                                      capitalize
+                                      caret-aware="cdAddressLines"
+                                      ng-model="load.cdAddress.addressLines"
+                                      ng-maxlength="200"></textarea>
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdaddressLines" field-name="Address Lines" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Post Town"
+                                   tooltip="Post Town"
+                                   ng-model="load.cdAddress.postTown"
+                                   name="cdPostTown"
+                                   capitalize
+                                   caret-aware="cdPostTown"
+                                   ng-maxlength="100"
+                                   required />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdPostTown" field-name="Post Town" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="County"
+                                   tooltip="County"
+                                   ng-model="load.cdAddress.county"
+                                   capitalize
+                                   caret-aware="cdAddress"
+                                   name="cdCounty"
+                                   ng-maxlength="100" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdCounty" field-name="County" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group typeahead typeahead-scrollable">
+                            <input type="text"
+                                   autocomplete="off"
+                                   class="form-control"
+                                   placeholder="Country"
+                                   tooltip="Country"
+                                   ng-model="load.cdAddress.country"
+                                   typeahead="cdCompanyCountry as load.cdAddress.country for cdCountry in countries | filter:{'name':$viewValue}"
+                                   typeahead-editable="true"
+                                   typeahead-loading="loading"
+                                   typeahead-on-select="setCountry($item)"
+                                   typeahead-dropdown="countries"
+                                   typeahead-dropdown-view-field="countries.name"
+                                   typeahead-dropdown-on-select="setCountry"
+                                   required
+                                   capitalize
+                                   caret-aware="country"
+                                   name="country"
+                                   ng-maxlength="100">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.country" field-name="Country" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Postcode"
+                                   tooltip="Postcode"
+                                   name="cdPostcode"
+                                   ng-maxlength="20"
+                                   ng-model="load.cdAddress.postcode"
+                                   ng-blur="load.cdAddress.postcode = load.cdAddress.postcode.toUpperCase()" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdPostcode" field-name="Postcode" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Contact"
+                                   tooltip="Contact"
+                                   ng-model="load.cdContactName"
+                                   capitalize
+                                   caret-aware="cdContactName"
+                                   name="cdContact"
+                                   ng-maxlength="100" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdContact" field-name="Contact" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Telephone"
+                                   tooltip="Telephone"
+                                   ng-model="load.cdTelephone"
+                                   ng-pattern="multipleTelephonePattern"
+                                   name="cdTelephone"
+                                   ng-maxlength="100" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.cdTelephone" field-name="Telephone" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="text"
+                                       class="form-control"
+                                       name="cdDate"
+                                       ng-model="load.cdDateTime"
+                                       datepicker-popup="dd/MM/yy"
+                                       close-text="Close"
+                                       is-open="cdDateOpened"
+                                       pr-format-date
+                                       pr-valid-date
+                                       ng-required="load.loadStatusId >= pending"
+                                       placeholder="Date"
+                                       tooltip="Date" />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" style="margin-left:-2px" ng-click="openCDDate($event)">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </button>
+                                </span>
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.cdDate" field-name="Date" only-when-touched></pr-validator>
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="col-md-6 no-padding">
+                            <div class="no-validation">
+                                <span tooltip="{{cdTimeTooltip()}}">
+                                    <input type="text"
+                                           class="form-control rounded"
+                                           id="CDTime"
+                                           name="cdTime"
+                                           ng-model="cdTimeValue"
+                                           placeholder="Any Time"
+                                           ui-timepicker="timePickerOptions"
+                                           pr-valid-time
+                                           pr-format-time
+                                           
+                                            />
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <h4 class="form-sub-header">Time Allowed On Site</h4>
+                <hr class="form-sep" />
+
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="number"
+                                       class="form-control rounded"
+                                       placeholder="Hours"
+                                       name="cdHours"
+                                       tooltip="Hours"
+                                       ng-model="load.cdHoursAllowedOnSite"
+                                       min="0" />
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.cdHours" field-name="Hours" only-when-touched>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="number"
+                                       class="form-control rounded"
+                                       placeholder="Minutes"
+                                       name="cdMins"
+                                       tooltip="Minutes"
+                                       ng-model="load.cdMinutesAllowedOnSite"
+                                       min="0"
+                                       max="60" />
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.cdMins" field-name="Minutes" only-when-touched>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!--Delivery-->
+            <div class="form-horizontal col-md-3">
+                <h4 class="form-sub-header">Delivery</h4>
+                <hr class="form-sep" />
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group typeahead typeahead-scrollable">
+                            <input type="text"
+                                   autocomplete="off"
+                                   class="form-control"
+                                   placeholder="Company Name"
+                                   tooltip="Company Name"
+                                   ng-model="load.ddCompanyName"
+                                   typeahead="ddCompanyAddress as load.ddCompanyName for ddCompanyAddress in ddCompanyAddresses | filter:{'name':$viewValue}"
+                                   typeahead-editable="true"
+                                   typeahead-loading="loading"
+                                   typeahead-template-url="/js/app/jobs/loads/company-address-template.html"
+                                   typeahead-on-select="setDeliveryAddress($item)"
+                                   typeahead-dropdown="ddCompanyAddresses"
+                                   typeahead-dropdown-view-field="addressLines"
+                                   typeahead-dropdown-on-select="setDeliveryAddress"
+                                   required
+                                   capitalize
+                                   caret-aware="ddCompanyName"
+                                   name="ddCompanyName"
+                                   ng-maxlength="100">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddCompanyName" field-name="Company Name" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <textarea rows="4"
+                                      class="form-control rounded"
+                                      placeholder="Address"
+                                      capitalize
+                                      caret-aware="ddAddressLines"
+                                      tooltip="Address"
+                                      name="ddaddressLines"
+                                      ng-model="load.ddAddress.addressLines"
+                                      ng-maxlength="200"></textarea>
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddaddressLines" field-name="Address Lines" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Post Town"
+                                   tooltip="Post Town"
+                                   ng-model="load.ddAddress.postTown"
+                                   name="ddPostTown"
+                                   ng-maxlength="100"
+                                   required
+                                   capitalize
+                                   caret-aware="ddPostTown" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddPostTown" field-name="Post Town" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="County"
+                                   tooltip="County"
+                                   name="ddCounty"
+                                   ng-model="load.ddAddress.county"
+                                   ng-maxlength="100"
+                                   capitalize
+                                   caret-aware="ddCounty" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddCounty" field-name="Post Town" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Postcode"
+                                   tooltip="Postcode"
+                                   name="ddPostcode"
+                                   ng-maxlength="20"
+                                   ng-model="load.ddAddress.postcode"
+                                   ng-blur="load.ddAddress.postcode = load.ddAddress.postcode.toUpperCase()" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddPostcode" field-name="Postcode" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Contact"
+                                   tooltip="Contact"
+                                   ng-model="load.ddContactName"
+                                   name="ddContact"
+                                   ng-maxlength="100"
+                                   capitalize
+                                   caret-aware="ddContact" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddContact" field-name="Contact" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Telephone"
+                                   tooltip="Telephone"
+                                   ng-model="load.ddTelephone"
+                                   ng-pattern="multipleTelephonePattern"
+                                   name="ddTelephone"
+                                   ng-maxlength="100" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.ddTelephone" field-name="Telephone" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="text"
+                                       class="form-control"
+                                       name="ddDate"
+                                       ng-model="load.ddDateTime"
+                                       datepicker-popup="dd/MM/yy"
+                                       close-text="Close"
+                                       is-open="ddDateOpened"
+                                       pr-format-date
+                                       pr-valid-date
+                                       ng-required="load.loadStatusId >= pending"
+                                       placeholder="Date"
+                                       tooltip="Date" />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" style="margin-left:-2px" ng-click="openDDDate($event)">
+                                        <i class="glyphicon glyphicon-calendar"></i>
+                                    </button>
+                                </span>
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.ddDate" field-name="Date" only-when-touched></pr-validator>
+                                </span>
+
+                            </div>
+                        </div>
+                        <div class="col-md-6 no-padding">
+                            <div class="no-validation">
+                                <span tooltip="{{ddTimeTooltip()}}">
+                                    <input type="text"
+                                           class="form-control rounded"
+                                           id="ddTime"
+                                           name="ddTime"
+                                           ng-model="ddTimeValue"
+                                           placeholder="Any Time"
+                                           ui-timepicker="timePickerOptions"
+                                           pr-valid-time
+                                           pr-format-time
+                                           />
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <h4 class="form-sub-header">Time Allowed On Site</h4>
+                <hr class="form-sep" />
+
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="number"
+                                       class="form-control rounded"
+                                       placeholder="Hours"
+                                       name="ddHours"
+                                       tooltip="Hours"
+                                       ng-model="load.ddHoursAllowedOnSite"
+                                       min="0" />
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.ddHours" field-name="Hours" only-when-touched>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 no-padding">
+                            <div class="input-group" pr-show-errors>
+                                <input type="number"
+                                       class="form-control rounded"
+                                       placeholder="Minutes"
+                                       name="ddMins"
+                                       tooltip="Minutes"
+                                       ng-model="load.ddMinutesAllowedOnSite"
+                                       min="0"
+                                       max="60" />
+                                <span class="input-group-addon input-group-addon-remove-border">
+                                    <pr-validator form-control="loadForm.ddMins" field-name="Minutes" only-when-touched>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Vehicle Details-->
+            <div class="form-horizontal col-md-3">
+                <h4 class="form-sub-header">Vehicle Details</h4>
+                <hr class="form-sep" />
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="no-validation">
+                            <input type="text"
+                                   autocomplete="off"
+                                   ng-model="load.requiredVehicleType"
+                                   typeahead="type as type.name for type in vehicleTypes | filter:{'name':$viewValue} | limitTo:50"
+                                   typeahead-editable="false"
+                                   typeahead-dropdown="vehicleTypes"
+                                   typeahead-dropdown-view-field="name"
+                                   class="form-control"
+                                   placeholder="Vehicle Type"
+                                   tooltip="Vehicle Type"
+                                   name="vehicleType">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <textarea rows="4"
+                                      class="form-control rounded"
+                                      placeholder="Special Instructions"
+                                      tooltip="Special Instructions"
+                                      name="specialInstructions"
+                                      ng-model="load.specialInstructions"
+                                      ng-maxlength="1000"></textarea>
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.specialInstructions" field-name="Special Instructions" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Additional Info"
+                                   tooltip="Additional Info"
+                                   ng-model="load.additionalInfo"
+                                   name="additionalInfo"
+                                   ng-maxlength="100" />
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.additionalInfo" field-name="Additional Info" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11">
+                        <div class="no-validation">
+                            <input type="text"
+                                   ng-currency
+                                   currency-symbol="£"
+                                   class="form-control rounded"
+                                   placeholder="Value"
+                                   ng-model="costsTotal"
+                                   tooltip="Value"
+                                   name="value"
+                                   tabindex="-1"
+                                   readonly />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-hide="isSubcontracted">
+                    <div class="col-md-11">
+                        <div class="no-validation">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Planned Vehicle Fleet Number"
+                                   tooltip="Planned Vehicle Fleet Number"
+                                   ng-model="load.plannedVehicleFleetNo"
+                                   readonly
+                                   tabindex="-1" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-hide="isSubcontracted">
+                    <div class="col-md-11">
+                        <div class="no-validation">
+                            <input type="text"
+                                   class="form-control rounded"
+                                   placeholder="Planned Driver"
+                                   tooltip="Planned Driver"
+                                   ng-model="load.plannedDriver"
+                                   readonly
+                                   tabindex="-1" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-show="isSubcontracted">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group typeahead typeahead-scrollable"  tooltip="{{subcontractorTooltip()}}">
+                            <input type="text"
+                                   autocomplete="off"
+                                   ng-model="load.subcontractor"
+                                   typeahead="sub as sub.name for sub in subcontractors | filter: {'name': $viewValue} | limitTo: 50"
+                                   typeahead-editable="true"
+                                   typeahead-dropdown="subcontractors"
+                                   typeahead-dropdown-view-field="name"
+                                   typeahead-dropdown-disabled="isSubcontractDisabled()"
+                                   class="form-control"
+                                   placeholder="Subcontractor"                                
+                                   name="subcontractor"
+                                   ng-required="isSubcontracted"
+                                   ng-disabled="isSubcontractDisabled()">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.subcontractor" field-name="Subcontractor" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" ng-show="isSubcontracted">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group typeahead typeahead-scrollable"  tooltip="{{subcontractorContactDetailsTooltip()}}">
+                            <input type="text"
+                                   autocomplete="off"
+                                   ng-model="load.subcontractorContactDetails"
+                                   typeahead="subcd as subcd.details for subcd in subcontractorContactDetails | filter: {'details': $viewValue} | limitTo: 50"
+                                   typeahead-editable="true"
+                                   typeahead-dropdown="subcontractorContactDetails"
+                                   typeahead-dropdown-view-field="details"
+                                   typeahead-dropdown-disabled="isSubcontractDisabled()"
+                                   class="form-control"
+                                   placeholder="Subcontractor Contact Details"                                
+                                   name="subcontractorContactDetails"
+                                   ng-required="isSubcontracted"
+                                   ng-disabled="isSubcontractDisabled()">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.subcontractorContactDetails" field-name="Subcontractor Contact Details" only-when-touched>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors> 
+                        <div class="no-validation" tooltip="{{deliveryStatusTooltip()}}">
+                            <input type="text"
+                                   autocomplete="off"
+                                   ng-model="load.deliveryStatus"
+                                   typeahead="delivStatus as delivStatus.name for delivStatus in deliveryStatuses | filter:{'name':$viewValue} | limitTo:5"
+                                   typeahead-editable="false"
+                                   typeahead-dropdown="deliveryStatuses"
+                                   typeahead-dropdown-disabled="isDeliveryStatusDisabled()"
+                                   typeahead-dropdown-view-field="name"
+                                   class="form-control"
+                                   placeholder="Delivery Status"
+                                   name="deliveryStatus"
+                                   required
+                                   ng-disabled="isDeliveryStatusDisabled()">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-11" pr-show-errors>
+                        <div class="input-group" tooltip="{{depotDisabledTooltip}}">
+                            <input type="text"
+                                   autocomplete="off"
+                                   ng-model="load.depot"
+                                   typeahead="depot as depot.name for depot in depots | filter:$viewValue | limitTo:5"
+                                   typeahead-editable="false"
+                                   typeahead-dropdown="depots"
+                                   typeahead-dropdown-disabled="isDepotDisabled"
+                                   typeahead-dropdown-view-field="name"
+                                   class="form-control"
+                                   placeholder="Depot"
+                                   name="depot"
+                                   required
+                                   ng-disabled="isDepotDisabled">
+                            <span class="input-group-addon input-group-addon-remove-border">
+                                <pr-validator form-control="loadForm.depot" field-name="Depot" only-when-touched></pr-validator>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <div class="input-group checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       id="cbAdrRequired"
+                                       ng-model="load.adrRequired"
+                                       tooltip="ADR Required"
+                                       name="adrRequired" /> ADR
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       id="cbDBT"
+                                       ng-model="load.dbtRequired"
+                                       tooltip="DBT Required"
+                                       name="dbtRequired" /> DBT
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       id="cbForsRequired"
+                                       ng-model="load.forsRequired"
+                                       tooltip="FORS Required"
+                                       name="forsRequired" /> FORS
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <div class="col-md-4">
+                        <div class="input-group checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       id="cbLezRequired"
+                                       ng-model="load.lezRequired"
+                                       tooltip="LEZ Required"
+                                       name="lezRequired" /> LEZ
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group checkbox">
+                            <label>
+                                <input type="checkbox"
+                                       id="cbCrossRailRequired"
+                                       ng-model="load.crossRailRequired"
+                                       tooltip="CrossRail Required"
+                                       name="crossRailRequired" /> CrossRail
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!--Costs-->
+            <div class="col-md-3">
+                <h4 class="form-sub-header">Value</h4>
+                <hr class="form-sep" />
+
+                <div ui-view="costs"></div>
+
+                <div class="form-group">
+                    <div class="col-md-6">
+                        <div class="input-group checkbox">
+                            <label class="disabledTooltipFix">
+                                <span tooltip="{{kamCompleteTooltip()}}">
+                                    <input type="checkbox"
+                                           id="cbKAMComplete"
+                                           ng-model="load.kamComplete"
+                                           name="KAM Complete"
+                                           ng-disabled="isKamCompleteDisabled()" />
+                                </span>KAM Complete
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group checkbox">
+                            <label class="disabledTooltipFix">
+                                <span tooltip="{{dmCompleteTooltip()}}">
+                                    <input type="checkbox"
+                                           id="cbDMComplete"
+                                           ng-model="load.dmComplete"
+                                           name="DM Complete"
+                                           ng-disabled="isDmCompleteDisabled()" />
+                                </span>DM Complete
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!--Goods Items-->
+            <div class="row">
+                <div class="form-sub-header col-md-12">
+                    <h4 class="form-sub-header">
+                        Goods Details
+                    </h4>
+                    <hr class="form-sep" />
+
+                    <table class="dwt-table table">
+                        <thead>
+                            <tr>
+                                <th>Quantity</th>
+                                <th style="width: 600px">Description</th>
+                                <th>Length</th>
+                                <th>Width</th>
+                                <th>Height</th>
+                                <th>Weight (kg)</th>
+                                <th>Total Weight (kg)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="goodsItem in load.goodsItems">
+                                <td>{{goodsItem.quantity}}</td>
+                                <td>
+                                    <a ng-click="editGoodsItem(goodsItem)" class="link-cursor">
+                                        <table class="fixed-table"><tr><td>{{goodsItem.description}}</td></tr></table>
+                                    </a>
+                                </td>
+                                <td>{{goodsItem.lengthDisplay}}</td>
+                                <td>{{goodsItem.widthDisplay}}</td>
+                                <td>{{goodsItem.heightDisplay}}</td>
+                                <td>{{goodsItem.weight | number}}</td>
+                                <td>{{goodsItem.quantity * goodsItem.weight | number}}</td>
+                                <td>
+                                    <div class="pull-right">
+                                        <button class="btn btn-xs btn-primary"
+                                             ng-click="editGoodsItem(goodsItem)"
+                                             tooltip="Edit goods item"
+                                             tabindex="0">
+                                            <span class="glyphicon glyphicon-edit"></span>
+                                        </button>
+                                        <button class="btn btn-xs btn-primary"
+                                             ng-really-message="Are you sure you want to delete this goods item?"
+                                             ng-really-ok="Yes"
+                                             ng-really-click="deleteGoodsItem(goodsItem)"                                           
+                                             tooltip="Delete item"
+                                             tabindex="0">
+                                            <span class="glyphicon glyphicon-remove-sign"></span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row list-action-row">
+                <div class="col-md-12">
+                    <button class="btn btn-primary pull-right" 
+                            id="btnAdd" 
+                            ng-click="addGoodsItem()" 
+                            tooltip="Add item"
+                            tabindex="0">
+                        <span class="glyphicon glyphicon-plus-sign"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="navbar navbar-default navbar-fixed-bottom">
+        <div class="container-fluid">
+            <div class="row footer">
+                <div class="footer-content">
+                    <div class="col-md-6 footer-links">
+                        <a ui-sref="auth.master.jobs.job.edit({jobId : jobId})">Back to Job</a>
+                    </div>
+                    <div class="col-md-6 footer-buttons">
+                        <div id="btnSave" class="btn btn-primary" ng-click="save()" tabindex="0">Save</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
